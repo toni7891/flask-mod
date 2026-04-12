@@ -220,7 +220,6 @@ def posts():
     delete_post(1, res)
     get_comments_for_post(1, res)
 
-# --- Execution ---
 if __name__ == "__main__":
     posts()
     comments()
