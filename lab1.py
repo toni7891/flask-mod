@@ -9,9 +9,11 @@ def get_all(res):
     response = requests.get(f"{BASE_URL}/{res}")
     print(f"getall: status {response.status_code}, count: {len(response.json())}")
 
+
 def getby_id(post_id, res):
     response = requests.get(f"{BASE_URL}/{post_id}")
     print(f"getbyID full data in for ID {post_id}:", response.json())
+
 
 def getby_userID(user_id, res):
     params = {'userId': user_id}
@@ -20,9 +22,11 @@ def getby_userID(user_id, res):
     for post in posts:
         print(f"title: {post["title"]}")
 
+
 def getby_item(item_id, res):
     response = requests.get(f"{BASE_URL}/{res}/{item_id}")
     print(f"getby_item raw data for {res} {item_id}:", response.json())
+
 
 def create_new(res, payload=None):
     if payload is None:
@@ -33,22 +37,28 @@ def create_new(res, payload=None):
     print(f"status: {response.status_code}")
     print(f"response: {response.json()}")
 
+
 def update_post_put(post_id, res):
     updated_data = {"id": post_id, "title": "dim", "body": "sim", "userId": 1}
     response = requests.put(f"{BASE_URL}/{res}/{post_id}", json=updated_data)
     print(f"status: {response.status_code}", )
     print(response.json())
+    
+
 
 def patch_post(post_id, res):
     partial_data = {"title": "what the heli"}
     response = requests.patch(f"{BASE_URL}/{res}/{post_id}", json=partial_data)
     print(f"status: {response.status_code}")
     print(response.json())
+    
+
 
 def delete_post(post_id, res):
     response = requests.delete(f"{BASE_URL}/{res}/{post_id}")
     print(f"status: {response.status_code}")
     print(response.json())
+
 
 def get_comments_for_post(post_id, res):
 
@@ -67,6 +77,7 @@ def filter_by_post(post_id, res):
         emails.append(email_address)
     print(f"filter by post {post_id}: \n emails: {emails}")
 
+
 def get_photos_for_album(album_id, res):
     response = requests.get(f"{BASE_URL}/{res}/{album_id}/photos")
     titles = []
@@ -74,10 +85,12 @@ def get_photos_for_album(album_id, res):
         titles.append(photo['title'])
     print(f"titles of photos in album {album_id}: {titles[:3]} len: {len(titles)})")
 
+
 def get_first_five(res):
     response = requests.get(f"{BASE_URL}/{res}")
     data = response.json()
     print(f"get ({res}) first 5 items:", data[:5])
+
 
 def filter_photos_by_album(album_id, res):
     params = {'albumId': album_id}
@@ -91,6 +104,7 @@ def filter_photos_by_album(album_id, res):
     
     print(f"filter by album {album_id}: URL found: {urls[:3]}...")
 
+
 def get_photos_for_album(album_id, res):
     response = requests.get(f"{BASE_URL}/{res}/{album_id}/photos")
     titles = []
@@ -101,6 +115,7 @@ def get_photos_for_album(album_id, res):
         
     print(f"titles in album {album_id}: {titles[:3]} len: {len(titles)})")
 
+
 def filter_todos_by_user(user_id, res):
     params = {'userId': user_id}
     response = requests.get(f"{BASE_URL}/{res}", params=params)
@@ -108,6 +123,7 @@ def filter_todos_by_user(user_id, res):
     for todo in response.json():
         titles.append(todo['title'])
     print(f"TODO titles for user {user_id}: {titles[:3]}...")
+
 
 def filter_todos_by_status(is_completed, res):
     params = {'completed': is_completed}
@@ -117,10 +133,12 @@ def filter_todos_by_status(is_completed, res):
         titles.append(todo['title'])
     print(f"titles: {is_completed}: {titles[:3]}...")
 
+
 def patch_todo_status(todo_id, res):
     partial_data = {"completed": True}
     response = requests.patch(f"{BASE_URL}/{res}/{todo_id}", json=partial_data)
     print(f"stat: {response.status_code}, raw data:", response.json())
+
 
 def get_users_summary(res):
     response = requests.get(f"{BASE_URL}/{res}")
@@ -129,6 +147,7 @@ def get_users_summary(res):
         summary = {"name": user['name'], "email": user['email']}
         users_list.append(summary)
     print(f"users fdata (name + mail): {users_list[:2]}...")
+
 
 def get_user_city(user_id, res):
     response = requests.get(f"{BASE_URL}/{res}/{user_id}")
@@ -179,6 +198,7 @@ def todos():
     patch_todo_status(1, res)
     delete_post(1, res)
 
+
 def photos():
     res = "photos"
     photo_data = {
@@ -193,6 +213,7 @@ def photos():
     create_new(res, payload=photo_data)
     delete_post(1, res)
 
+
 def albums():
     res = "albums"
     get_all(res)
@@ -201,6 +222,7 @@ def albums():
     create_new(res)
     delete_post(1, res)
 
+
 def comments():
     res = "comments"
     get_all(res) 
@@ -208,6 +230,7 @@ def comments():
     filter_by_post(1, res)
     create_new(res)
     delete_post(5, res)
+
 
 def posts():
     res = "posts"
@@ -219,6 +242,7 @@ def posts():
     patch_post(1, res)
     delete_post(1, res)
     get_comments_for_post(1, res)
+
 
 if __name__ == "__main__":
     posts()
