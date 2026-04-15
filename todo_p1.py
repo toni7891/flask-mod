@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request 
-import uuid
 app = Flask(__name__)
 
 tasks = [
