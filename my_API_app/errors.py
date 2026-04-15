@@ -7,8 +7,6 @@ errors_bp = Blueprint("errors", __name__)
 @errors_bp.app_errorhandler(HTTPException)
 def handle_type_error(e):
     custom_message = e.description 
-
-    # Custom logic based on the status code
     if e.code == 400:
         custom_message = "bad request use correct json format and str in title"
     elif e.code == 422:
