@@ -32,6 +32,5 @@ def handle_type_error1(e):
 @errors_bp.app_errorhandler(NotFound)
 def handle_not_found(e):
     return jsonify({
-        "code": 404,
-        "description": e.description
+        "ERROR": "404 Not Found: missing not found",
     }), 404

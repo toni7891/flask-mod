@@ -1,55 +1,43 @@
 import uuid
 from flask import request
-from werkzeug.exceptions import NotFound, BadRequest, HTTPException, MethodNotAllowed, UnprocessableEntity
-
-
-tasks = [
-    {
-        "id" : "1",
-        "title" : "Learn Flask",
-        "completed" : False
-    },
-    {
-        "id" : "2",
-        "title" : "Build API",
-        "completed" : False
-    },
-    {
-        "id" : "3",
-        "title" : "Test with postman",
-        "completed" : True
-    },
-]
-
+from werkzeug.exceptions import NotFound, BadRequest, UnprocessableEntity
+from database import todos_collection
+from bson.objectid import ObjectId
 
 def getall():
-    return tasks
+    all_todos = list(todos_collection.find())
+    for task in all_todos:
+        task["_id"] = str(task["_id"])
+        
+    return all_todos 
 
 
-def getby_id(id):    
-    for task in tasks:
-        if  task["id"] == id:
-            return task
-    raise NotFound("ID provided does not exist in DB")
+def getby_id(id): 
+    try:
+        needed_task = todos_collection.find_one({"_id": ObjectId(id)})
+        if needed_task:
+            needed_task["_id"] = str(needed_task["_id"])
+            return needed_task
+    except:
+        raise NotFound("ID provided does not exist in DB")
 
 def post_new(data):   
     
     if not data or "title" not in data:
-        raise BadRequest("the request body most be JSON")
+        raise UnprocessableEntity("the request body most be JSON")
 
     if not isinstance(data["title"], str):
-        raise BadRequest("title must be a string")
+        raise UnprocessableEntity("title must be a string")
 
     if not data["title"].strip():
         raise UnprocessableEntity("string cannot be empty or without spaces") 
     
     new_todo = {
-        "id" : str(uuid.uuid4()),
-        "title" : data["title"],
+        "title" : data.get("title"),
         "completed" : False
     }
-    tasks.append(new_todo)
-    
+    todos_collection.insert_one(new_todo)
+    new_todo["_id"] = str(new_todo["_id"])
     return {
         "success" : True,
         "new task" : new_todo
@@ -61,26 +49,40 @@ def edit_one(id):
     if update_data == {}:
         raise BadRequest("the request body most be JSON")
 
+
     if not isinstance(update_data["title"], str):
         raise BadRequest("title must be a string")
     
     if not update_data["title"].strip():
         raise UnprocessableEntity("string cannot be empty or without spaces")
+    if "completed" in update_data:
+        if not isinstance(update_data["completed"], bool):
+            raise BadRequest("state of completed must be BOOLean") 
     
-    if not isinstance(update_data["completed"], bool):
-        raise BadRequest("state of completed must be BOOLean")       
-    for task in tasks:
-        if task["id"] == id:
-            task["completed"] = update_data["completed"]
-            task["title"] = update_data["title"] 
-            return f"{task} updated"
-        
-    raise NotFound("ID provided does not exist in DB")
+    success = todos_collection.update_one(
+        {"_id": ObjectId(id)},{
+            "$set" : {
+                "title": update_data["title"],
+                "completed" : update_data["completed"]
+            }})
+    
+    if success.matched_count == 0:
+        raise NotFound("ID provided does not exist in DB")
+
+    new_data ={
+            "_id" : id,
+            "title": update_data["title"],
+            "completed" : update_data["completed"]
+            }
+    
+    return new_data        
         
 def delete_one(id):
-    for ind, task in enumerate(tasks):
-        if task["id"] == id:
-            tasks.pop(ind)
-            return f"{id} been deleted"
-    raise NotFound("ID provided does not exist in DB")
+    try:
+        success = todos_collection.delete_one({"_id": ObjectId(id)})
+        if success.deleted_count == 0:
+                raise NotFound("ID provided does not exist in DB")
+        return f"{id} has been deleted"
+    except Exception:
+        raise NotFound("ID provided does not exist in DB")
     
