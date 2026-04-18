@@ -1,4 +1,3 @@
-import uuid
 from flask import request
 from werkzeug.exceptions import NotFound, BadRequest, UnprocessableEntity
 from database import todos_collection
@@ -12,13 +11,13 @@ def getall():
     return all_todos 
 
 
-def getby_id(id): 
+def getby_id(id1): 
     try:
-        needed_task = todos_collection.find_one({"_id": ObjectId(id)})
+        needed_task = todos_collection.find_one({"_id": ObjectId(id1)})
         if needed_task:
             needed_task["_id"] = str(needed_task["_id"])
             return needed_task
-    except:
+    except (NotFound, Exception):
         raise NotFound("ID provided does not exist in DB")
 
 def post_new(data):   
@@ -30,14 +29,20 @@ def post_new(data):
         raise UnprocessableEntity("title must be a string")
 
     if not data["title"].strip():
-        raise UnprocessableEntity("string cannot be empty or without spaces") 
+        raise UnprocessableEntity("string cannot be empty or without spaces")
+    
+    if "completed" in data:
+        if not isinstance(data["completed"], bool):
+            raise BadRequest("The 'completed' field must be a boolean (true/false).")
     
     new_todo = {
-        "title" : data.get("title"),
-        "completed" : False
+        "title" : data.get("title").strip(),
+        "completed" : data.get("completed", False)
     }
+    
     todos_collection.insert_one(new_todo)
     new_todo["_id"] = str(new_todo["_id"])
+    
     return {
         "success" : True,
         "new task" : new_todo
@@ -46,8 +51,17 @@ def post_new(data):
 def edit_one(id):    
     update_data = request.json  
     
-    if update_data == {}:
+    check_id = getby_id(id)
+    
+    
+    if not update_data:
         raise BadRequest("the request body most be JSON")
+    
+    if "title" not in update_data:
+        raise BadRequest("the request has to have a title")
+    
+    if "completed" not in update_data:
+        raise BadRequest("the request has to have a title")
 
 
     if not isinstance(update_data["title"], str):
@@ -55,6 +69,7 @@ def edit_one(id):
     
     if not update_data["title"].strip():
         raise UnprocessableEntity("string cannot be empty or without spaces")
+    
     if "completed" in update_data:
         if not isinstance(update_data["completed"], bool):
             raise BadRequest("state of completed must be BOOLean") 

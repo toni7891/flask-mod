@@ -11,7 +11,7 @@ def taskss():
     
     if request.method == "POST":
         data_new = request.json
-        return post_new(data_new),201
+        return jsonify(post_new(data_new)),201
     
     if request.method == "GET":
         return jsonify(getall())
