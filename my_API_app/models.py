@@ -94,6 +94,7 @@ def edit_one(id):
         
 def delete_one(id):
     try:
+        verify_id = getby_id(id)
         success = todos_collection.delete_one({"_id": ObjectId(id)})
         if success.deleted_count == 0:
                 raise NotFound("ID provided does not exist in DB")
