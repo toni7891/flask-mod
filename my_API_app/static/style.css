@@ -4,9 +4,15 @@
   padding: 0;
 }
 
+:root {
+  --accent: #6366f1;
+  --card-bg: rgba(255,255,255,0.95);
+  --text-primary: #1e293b;
+}
+
 body {
   font-family: "Segoe UI", system-ui, sans-serif;
-  background: #f0f2f5;
+  background: none;
   min-height: 100vh;
   display: flex;
   align-items: flex-start;
@@ -14,14 +20,74 @@ body {
   padding: 48px 16px;
 }
 
+/* Dynamic animated gradient background */
+.dynamic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(120deg, #a18cd1 0%, #fbc2eb 35%, #8fd3f4 65%, #c6ffdd 100%);
+  background-size: 600% 600%;
+  animation: gradientShift 20s ease infinite;
+  filter: blur(36px) saturate(120%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .container {
-  background: #fff;
+  position: relative;
+  z-index: 1;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 520px;
   padding: 36px 32px;
 }
+
+/* Collections bar */
+.collections-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+#collection-select {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: var(--text-primary);
+  transition: 0.3s;
+}
+
+.collection-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-small {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-small:hover { transform: translateY(-1px); }
+
+.btn-danger { background: #ef4444; }
 
 h1 {
   font-size: 1.8rem;
@@ -86,6 +152,7 @@ h1 {
   border-radius: 8px;
   padding: 12px 14px;
   transition: background 0.15s;
+  animation: fadeIn 0.25s ease;
 }
 
 .task-item:hover {
@@ -187,4 +254,9 @@ h1 {
   padding: 10px 14px;
   font-size: 0.9rem;
   margin-top: 16px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

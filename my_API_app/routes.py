@@ -1,11 +1,47 @@
 from flask import jsonify, request, Blueprint
 from werkzeug.exceptions import MethodNotAllowed
-from models import getall, getby_id, post_new, edit_one, delete_one
+from models import (
+    getall, getby_id, post_new, edit_one, delete_one,
+    get_collections, create_collection, delete_collection,
+    get_tasks_for_collection, post_new_to_collection
+)
 
 tasks_bp = Blueprint("tasks", __name__)
 
+
+@tasks_bp.route('/collections', methods=["GET", "POST"])
+def collections():
+    if request.method not in ["GET", "POST"]:
+        raise MethodNotAllowed("incorrect method for request")
+    if request.method == "GET":
+        return jsonify(get_collections()), 200
+    if request.method == "POST":
+        data = request.json
+        name = data.get("name") if data else None
+        return jsonify(create_collection(name)), 201
+
+
+@tasks_bp.route('/collections/<name>', methods=["DELETE"])
+def collection_delete(name):
+    if request.method != "DELETE":
+        raise MethodNotAllowed("incorrect method for request")
+    return jsonify(delete_collection(name)), 200
+
+
+@tasks_bp.route('/tasks/<collection_name>', methods=["GET", "POST"])
+def tasks_by_collection(collection_name):
+    if request.method not in ["GET", "POST"]:
+        raise MethodNotAllowed("incorrect method for request")
+    if request.method == "GET":
+        return jsonify(get_tasks_for_collection(collection_name)), 200
+    if request.method == "POST":
+        data_new = request.json
+        return jsonify(post_new_to_collection(collection_name, data_new)), 201
+
+
 @tasks_bp.route('/tasks', methods=["GET", "POST"])
 def taskss():
+    # legacy endpoints: use default collection mapping
     if request.method not in ["GET","POST"]:
         raise MethodNotAllowed("incorrect method for request")
     
@@ -15,7 +51,7 @@ def taskss():
     
     if request.method == "GET":
         return jsonify(getall())
-    
+
 
 @tasks_bp.route('/tasks/<id>', methods=["GET", "PUT", "DELETE"])
 def getbyid(id):    
