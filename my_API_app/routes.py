@@ -41,16 +41,22 @@ def tasks_by_collection(collection_name):
 
 @tasks_bp.route('/tasks', methods=["GET", "POST"])
 def taskss():
-    # legacy endpoints: use default collection mapping
+    # Support query param ?collection=NAME
     if request.method not in ["GET","POST"]:
         raise MethodNotAllowed("incorrect method for request")
-    
+
     if request.method == "POST":
-        data_new = request.json
-        return jsonify(post_new(data_new)),201
-    
+        data_new = request.json or {}
+        # Expect caller to include a `collection` field; default to General
+        collection_name = data_new.get("collection", "General")
+        return jsonify(post_new_to_collection(collection_name, data_new)),201
+
     if request.method == "GET":
-        return jsonify(getall())
+        collection_q = request.args.get("collection")
+        if not collection_q or collection_q == "All":
+            return jsonify(getall())
+        else:
+            return jsonify(get_tasks_for_collection(collection_q)), 200
 
 
 @tasks_bp.route('/tasks/<id>', methods=["GET", "PUT", "DELETE"])

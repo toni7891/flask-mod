@@ -65,10 +65,15 @@
         li.className = "task-item" + (task.completed ? " completed" : "");
         li.dataset.id = task._id;
 
+        // include collection badge when viewing All
+        const badge = (currentCollection === 'All' && task.collection)
+          ? `<span class="collection-badge">[${escapeHtml(task.collection)}]</span>`
+          : '';
+
         li.innerHTML = `
           <label class="checkbox-label">
             <input type="checkbox" class="toggle-cb" ${task.completed ? "checked" : ""} />
-            <span class="title-text">${escapeHtml(task.title)}</span>
+            <span class="title-text">${escapeHtml(task.title)} ${badge}</span>
           </label>
           <div class="actions">
             <button class="btn-edit" title="Edit">&#9998;</button>
@@ -101,10 +106,16 @@
         const items = await res.json();
         if (!res.ok) throw new Error(items.error || 'Failed to load collections');
 
+        // Always include an 'All' top option
         collectionSelect.innerHTML = '';
+        const optAll = document.createElement('option');
+        optAll.value = 'All';
+        optAll.textContent = 'All Tasks';
+        collectionSelect.appendChild(optAll);
+
+        // ensure at least one collection exists
         if (items.length === 0) {
-          // create a default collection
-          await createCollection('Default');
+          await createCollection('General');
           return loadCollections();
         }
 
@@ -115,8 +126,8 @@
           collectionSelect.appendChild(opt);
         });
 
-        // set current and load tasks
-        currentCollection = collectionSelect.value || items[0];
+        // set current and load tasks (default to All)
+        currentCollection = 'All';
         collectionSelect.value = currentCollection;
         loadTasksForCurrent();
       } catch (e) {
@@ -145,7 +156,8 @@
     async function loadTasksForCurrent() {
       if (!currentCollection) return;
       try {
-        const res = await fetch(`/tasks/${encodeURIComponent(currentCollection)}`);
+        // use ?collection= query param; 'All' returns all tasks
+        const res = await fetch(`/tasks?collection=${encodeURIComponent(currentCollection)}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to load tasks');
         renderTasks(data);
@@ -156,10 +168,12 @@
 
     async function createTask(title) {
       if (!currentCollection) throw new Error('No collection selected');
-      const res  = await fetch(`/tasks/${encodeURIComponent(currentCollection)}`, {
+      // when in All view, default new tasks to General collection
+      const collectionToUse = currentCollection === 'All' ? 'General' : currentCollection;
+      const res  = await fetch(`/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, collection: collectionToUse }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create task");
