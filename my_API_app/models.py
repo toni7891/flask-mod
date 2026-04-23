@@ -26,7 +26,6 @@ def create_collection(collection):
 
     collection = collection.strip()
     col = get_collection("collections")
-    # accept existing docs that used 'name' previously
     existing = col.find_one({"$or": [{"collection": collection}, {"name": collection}]})
     if existing:
         raise BadRequest("Collection already exists")
@@ -38,9 +37,9 @@ def delete_collection(collection_name):
     if not collection_name or not isinstance(collection_name, str):
         raise BadRequest("Invalid collection name")
     col = get_collection("collections")
-    # delete collection docs whether they used 'collection' or legacy 'name'
+
     res = col.delete_one({"$or": [{"collection": collection_name}, {"name": collection_name}]})
-    # delete tasks in data with this collection
+
     data_col = get_collection("data")
     data_col.delete_many({"collection": collection_name})
     if res.deleted_count == 0:
