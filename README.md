@@ -1,47 +1,110 @@
-# Task Management API (my_API_app)
+# Flask Task API (my_API_app)
 
-A modular API built with Python and Flask for managing a task list. This application uses a Blueprint-based architecture to separate routing logic from centralized error handling.
+This repository contains a small Flask-based Task Management API used for learning and exercises.
 
-## Project Structure
+**Contents**
+- `my_API_app/` — main application package
+  - `app.py` — application factory / entry point
+  - `database.py` — MongoDB connection helper (provides `get_collection`)
+  - `routes.py` — Flask route handlers for the API
+  - `models.py` — business logic / data access functions (uses `get_collection`)
+  - `errors.py` — centralized error handlers
+  - `static/` — static assets (CSS)
+  - `templates/` — HTML templates (optional UI)
+- `tests/` — pytest tests
+- `todo_p1.py`, `todo_p2.py`, `prac_lessons/` — practice files and labs
 
-* **app.py**: The entry point that initializes the Flask app and registers the `tasks_bp` and `errors_bp` blueprints.
-* **routes.py**: Defines endpoints for CRUD operations on tasks.
-* **models.py**: Contains the mock database (list of dictionaries) and functions for data manipulation.
-* **errors.py**: Implements global error handlers using `@app_errorhandler` to return JSON responses instead of HTML.
+Project structure (high level):
+```
+README.md
+todo_p1.py
+todo_p2.py
+my_API_app/
+  app.py
+  database.py
+  errors.py
+  models.py
+  routes.py
+  requirements.txt
+  static/
+    style.css
+  templates/
+    index.html
+tests/
+  conftest.py
+  test_task_app.py
+prac_lessons/
+  lab1.py
+  lab2.py
+  lesson_prac1.py
+```
 
-## Features
+**What this app does**
+- Provides CRUD endpoints to manage tasks stored in a MongoDB collection called `data`.
+- Supports multiple named collections (namespaces) via a `collections` collection.
+- Validates input and returns JSON errors using `werkzeug` exceptions.
 
-* **Modular Architecture**: Separates concerns using Flask Blueprints.
-* **Unique Identification**: Uses `uuid` to generate unique IDs for every new task.
-* **Custom JSON Errors**: Overrides default Flask/Werkzeug HTML errors with a structured JSON format.
-* **Input Validation**: Includes checks for JSON body presence, string type for titles, and boolean type for task completion status.
+Key behavior implemented in `my_API_app/models.py`:
+- List all tasks and convert Mongo ObjectIds to strings for JSON responses.
+- Create/delete collections and cascade-delete tasks for a collection.
+- Create tasks (global or scoped to a collection) with `title` (string) and optional `completed` (boolean).
+- Fetch, edit, and delete single tasks by ObjectId string; raises `NotFound` when missing.
+- Robust input validation: non-empty titles, correct types, and clear error codes.
 
-## API Endpoints
+Getting started
+---------------
+1. Create a virtual environment (recommended):
 
-### Tasks Collection
-* **GET `/tasks`**: Retrieve the full list of tasks.
-* **POST `/tasks`**: Create a new task.
-    * **Body**: `{"title": "string"}`
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
 
-### Individual Task Operations
-* **GET `/tasks/<id>`**: Retrieve a specific task by ID.
-* **PUT `/tasks/<id>`**: Update an existing task's title and status.
-    * **Body**: `{"title": "string", "completed": boolean}`
-* **DELETE `/tasks/<id>`**: Remove a task from the list.
+2. Install dependencies:
 
-## Error Handling
+```bash
+pip install -r my_API_app/requirements.txt
+```
 
-The API returns consistent JSON objects for errors:
+3. Configure MongoDB
+- `my_API_app/database.py` expects a Mongo connection. Set environment variables if used (e.g. `MONGODB_URI`) or update `database.py` to point to your local Mongo.
 
-| Code | Custom Message | Scenario |
-| :--- | :--- | :--- |
-| **400** | "bad request use correct json format and str in title" | Missing or malformed JSON body. |
-| **404** | "Not Found" | Requested Task ID does not exist. |
-| **405** | "Method not allowed for this endpoint..." | Using the wrong HTTP method (e.g., POST to a GET-only route). |
-| **422** | "invalid input of data" | Title is empty or contains only spaces. |
+4. Run the app locally:
 
-## Getting Started
+```bash
+python my_API_app/app.py
+```
 
-1. **Install Dependencies**:
-   ```bash
-   pip install flask
+5. Run tests:
+
+```bash
+pytest -q
+```
+
+API Summary
+-----------
+- `GET /tasks` — list all tasks
+- `POST /tasks` — create a task: `{"title": "Buy milk"}`
+- `GET /tasks/<id>` — get task by id
+- `PUT /tasks/<id>` — update task (title and/or completed)
+- `DELETE /tasks/<id>` — delete task by id
+
+Collection-specific endpoints (if implemented in `routes.py`):
+- `GET /collections` — list collection names
+- `POST /collections` — create collection `{ "collection": "work" }`
+- `DELETE /collections/<name>` — delete a collection and its tasks
+- `GET /collections/<name>/tasks` — tasks for a collection
+- `POST /collections/<name>/tasks` — create task in a collection
+
+Notes & Next steps
+------------------
+- `models.py` currently uses `bson.ObjectId` and raises `werkzeug` exceptions; ensure your `database.py` returns proper PyMongo collections.
+- If you'd like, I can:
+  - run the tests and fix any failing cases,
+  - improve the app startup (Flask app factory), or
+  - add example curl commands and Postman collection.
+
+File references
+---------------
+- See `my_API_app/models.py` for data validation and operations.
+- See `my_API_app/routes.py` for the exact route definitions and payload expectations.
