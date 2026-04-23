@@ -15,33 +15,37 @@ def getall():
 
 def get_collections():
     col = get_collection("collections")
-    items = list(col.find({}, {"_id": 0, "name": 1}))
-    return [it["name"] for it in items]
+    # support existing docs that may use either 'collection' or legacy 'name'
+    items = list(col.find({}, {"_id": 0, "collection": 1, "name": 1}))
+    return [it.get("collection") or it.get("name") for it in items]
 
 
-def create_collection(name):
-    if not name or not isinstance(name, str) or not name.strip():
-        raise UnprocessableEntity("collection name must be a non-empty string")
-    name = name.strip()
+def create_collection(collection):
+    if not collection or not isinstance(collection, str) or not collection.strip():
+        raise UnprocessableEntity("collection must be a non-empty string")
+
+    collection = collection.strip()
     col = get_collection("collections")
-    existing = col.find_one({"name": name})
+    # accept existing docs that used 'name' previously
+    existing = col.find_one({"$or": [{"collection": collection}, {"name": collection}]})
     if existing:
         raise BadRequest("Collection already exists")
-    col.insert_one({"name": name})
-    return {"success": True, "name": name}
+    col.insert_one({"collection": collection})
+    return {"success": True, "collection": collection}
 
 
-def delete_collection(name):
-    if not name or not isinstance(name, str):
+def delete_collection(collection_name):
+    if not collection_name or not isinstance(collection_name, str):
         raise BadRequest("Invalid collection name")
     col = get_collection("collections")
-    res = col.delete_one({"name": name})
+    # delete collection docs whether they used 'collection' or legacy 'name'
+    res = col.delete_one({"$or": [{"collection": collection_name}, {"name": collection_name}]})
     # delete tasks in data with this collection
     data_col = get_collection("data")
-    data_col.delete_many({"collection": name})
+    data_col.delete_many({"collection": collection_name})
     if res.deleted_count == 0:
         raise NotFound("Collection not found")
-    return {"success": True, "deleted": name}
+    return {"success": True, "deleted": collection_name}
 
 
 def get_tasks_for_collection(collection_name):

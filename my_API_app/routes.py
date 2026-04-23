@@ -17,15 +17,16 @@ def collections():
         return jsonify(get_collections()), 200
     if request.method == "POST":
         data = request.json
-        name = data.get("name") if data else None
-        return jsonify(create_collection(name)), 201
+        # prefer 'collection' key, accept legacy 'name'
+        collection = (data.get("collection") if data else None) or (data.get("name") if data else None)
+        return jsonify(create_collection(collection)), 201
 
 
-@tasks_bp.route('/collections/<name>', methods=["DELETE"])
-def collection_delete(name):
+@tasks_bp.route('/collections/<collection>', methods=["DELETE"])
+def collection_delete(collection):
     if request.method != "DELETE":
         raise MethodNotAllowed("incorrect method for request")
-    return jsonify(delete_collection(name)), 200
+    return jsonify(delete_collection(collection)), 200
 
 
 @tasks_bp.route('/tasks/<collection_name>', methods=["GET", "POST"])
