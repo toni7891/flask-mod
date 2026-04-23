@@ -99,10 +99,7 @@ Collection-specific endpoints (if implemented in `routes.py`):
 Notes & Next steps
 ------------------
 - `models.py` currently uses `bson.ObjectId` and raises `werkzeug` exceptions; ensure your `database.py` returns proper PyMongo collections.
-- If you'd like, I can:
-  - run the tests and fix any failing cases,
-  - improve the app startup (Flask app factory), or
-  - add example curl commands and Postman collection.
+
 
 File references
 ---------------
